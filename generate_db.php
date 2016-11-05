@@ -16,7 +16,8 @@
         $text_array = explode(' ',$text);
         $word_list = [];
         foreach($text_array as $word){
-            if(ctype_alnum($word)){
+            $word = preg_replace("/[^A-Za-z0-9 ]/", '', $word);
+            if($word != ''){
                 $word_list[] = $word;
             }
         }
@@ -44,7 +45,5 @@
                 }
             }
         }
-
-        die('finished book 1');
     }
 ?>
