@@ -1,13 +1,38 @@
 <?php
     include 'connection.php';
 
+    echo "\n\n";
     $result = $mysqli->query("SELECT w.word,w.id FROM words w JOIN connections c ON c.first_word = w.id ORDER BY c.weight DESC LIMIT 1");
     $arr = $result->fetch_array(MYSQLI_ASSOC);
     $str = $arr['word'] . ' ';
+    $w = $arr['word'];
     for($i = 0; $i < 50; $i++){
-        $result = $mysqli->query("SELECT w.word,w.id FROM words w JOIN connections c ON c.second_word = w.id WHERE c.first_word = " . $arr['id'] . " ORDER BY c.weight DESC LIMIT 1");
-        $arr = $result->fetch_array(MYSQLI_ASSOC);
-        $str .= $arr['word'] . ' ';
+        $w = pickNextWord($w);
+        $str .= $w . ' ';
+
     }
     echo $str;
+    echo "\n\n";
+
+    function pickNextWord($word){
+        global $mysqli;
+        $result = $mysqli->query("SELECT w.word,c.weight FROM words w JOIN connections c ON c.second_word = w.id WHERE c.first_word = (SELECT id FROM words WHERE word = '$word') ORDER BY c.weight DESC");
+        $weights = [];
+        while($row = $result->fetch_array(MYSQLI_ASSOC)){
+            $weights[$row['word']] = $row['weight'];
+        }
+
+        return getRandomWeightedElement($weights);
+    }
+
+    function getRandomWeightedElement(array $weightedValues) {
+        $rand = mt_rand(1, (int) array_sum($weightedValues));
+
+        foreach ($weightedValues as $key => $value) {
+            $rand -= $value;
+            if ($rand <= 0) {
+                return $key;
+            }
+        }
+    }
 ?>
