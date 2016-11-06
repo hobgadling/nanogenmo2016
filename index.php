@@ -6,7 +6,7 @@
     $arr = $result->fetch_array(MYSQLI_ASSOC);
     $str = [$arr['word']];
     $w = $arr['word'];
-    for($i = 0; $i < 50; $i++){
+    while(count($str) <= 50){
         $w = pickNextWord($w,$str);
         $str[] = $w;
 
