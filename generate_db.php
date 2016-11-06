@@ -16,32 +16,44 @@
         $text_array = explode(' ',$text);
         $word_list = [];
         foreach($text_array as $word){
-            $word = preg_replace("/[^A-Za-z0-9 ]/", '', $word);
+            $word = preg_replace("/[^A-Za-z0-9., ]/", '', $word);
             if($word != ''){
-                $word_list[] = $word;
+                $word_list[1][] = $word;
             }
         }
 
-        foreach($word_list as $id=>$word){
-            $result = $mysqli->query("SELECT id FROM words WHERE word = '$word'");
-            if($result->num_rows == 0){
-                $res = $mysqli->query("INSERT INTO words (word) VALUES('$word')");
-                $word_id = $mysqli->insert_id;
-            } else {
-                $row = $result->fetch_array(MYSQLI_ASSOC);
-                $word_id = $row['id'];
+        for($i = 2; $i <= 10; $i++){
+            foreach($word_list[1] as $id => $word){
+                $arr = [$word];
+                for($j = 1; $j < $i; $j++){
+                    $arr[] = $word_list[1][$id + $j];
+                }
+                $word_list[$i][] = implode(' ',$arr);
             }
+        }
 
-            if($id > 0){
-                $result = $mysqli->query("SELECT id FROM words WHERE word = '" . $word_list[$id - 1] . "'");
-                $row = $result->fetch_array(MYSQLI_ASSOC);
-                $first_id = $row['id'];
-                $result = $mysqli->query("SELECT id,weight FROM connections WHERE first_word = $first_id AND second_word = $word_id");
+        foreach($word_list as $length => $list){
+            foreach($list as $id=>$word){
+                $result = $mysqli->query("SELECT id FROM words WHERE word = '$word'");
                 if($result->num_rows == 0){
-                    $res = $mysqli->query("INSERT INTO connections (first_word,second_word,weight) VALUES($first_id,$word_id,1)");
+                    $res = $mysqli->query("INSERT INTO words (word) VALUES('$word')");
+                    $word_id = $mysqli->insert_id;
                 } else {
                     $row = $result->fetch_array(MYSQLI_ASSOC);
-                    $res = $mysqli->query("UPDATE connections SET weight = " . ($row['weight'] + 1) . " WHERE id = " . $row['id']);
+                    $word_id = $row['id'];
+                }
+
+                if($id - $length >= 0){
+                    $result = $mysqli->query("SELECT id FROM words WHERE word = '" . $word_list[$length][$id - $length] . "'");
+                    $row = $result->fetch_array(MYSQLI_ASSOC);
+                    $first_id = $row['id'];
+                    $result = $mysqli->query("SELECT id,weight FROM connections WHERE first_word = $first_id AND second_word = $word_id");
+                    if($result->num_rows == 0){
+                        $res = $mysqli->query("INSERT INTO connections (first_word,second_word,weight,length) VALUES($first_id,$word_id,1,$length)");
+                    } else {
+                        $row = $result->fetch_array(MYSQLI_ASSOC);
+                        $res = $mysqli->query("UPDATE connections SET weight = " . ($row['weight'] + 1) . " WHERE id = " . $row['id']);
+                    }
                 }
             }
         }
