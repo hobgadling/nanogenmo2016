@@ -6,17 +6,40 @@
     $arr = $result->fetch_array(MYSQLI_ASSOC);
     $str = [$arr['word']];
     $w = $arr['word'];
-    while(count($str) <= 50){
-        $w = pickNextWord($w,$str);
-        $str[] = $w;
+    $full_text = '';
+    for($i = 0; $i < 20; $i++){
+        $full_text .= "Chapter " . ($i + 1) . "\n\n";
+        while(count($str) <= 2500){
+            $w = pickNextWord($w,$str);
+            $word_arr = explode(' ',$w);
+            foreach($word_arr as $word){
+                $str[] = $word;
+            }
+        }
+        $text = implode(' ',$str);
+        $sentences = explode('.',$text);
+        foreach($sentences as $id=>$sentence){
+            $sentences[$id] = ucfirst($sentence);
+        }
+        $paragraphs = array_chunk($sentences,3);
+        $full_text .= "\t";
+        foreach($paragraphs as $paragraph){
+            $full_text .= implode('. ',$paragraph) . ".\n\t";
+        }
 
+        $full_text .= "\n\n";
     }
-    echo implode(' ',$str);
+
+    echo $full_text;
     echo "\n\n";
+
+    $fp = fopen('txt/novel.txt','w');
+    fwrite($fp,$full_text);
+    fclose($fp);
 
     function pickNextWord($word,$text){
         global $mysqli;
-        $l = min(9,count($text));
+        $l = min(5,count($text));
         $str_array = array_slice($text,count($text) - $l);
         $words = [];
         while(count($str_array) > 0){

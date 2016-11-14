@@ -22,7 +22,7 @@
             }
         }
 
-        for($i = 2; $i <= 10; $i++){
+        for($i = 2; $i <= 5; $i++){
             foreach($word_list[1] as $id => $word){
                 $arr = [$word];
                 for($j = 1; $j < $i; $j++){
